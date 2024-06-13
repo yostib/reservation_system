@@ -1,21 +1,33 @@
 // src/components/Register.js
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
+import { auth } from '../firebase';
+import { useNavigate } from 'react-router-dom';
+import './Register.css';
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    // Handle registration logic
+    try {
+      await auth.createUserWithEmailAndPassword(email, password);
+      setSuccessMessage('Registration successful!');
+      setTimeout(() => {
+        navigate('/login'); // or '/dashboard' based on your flow
+      }, 2000); // Adjust the timeout duration as needed
+    } catch (error) {
+      console.error("Error registering: ", error.message);
+    }
   };
 
   return (
-    <div>
+    <div className="container">
       <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
+      <form onSubmit={handleRegister}>
+        <div className="form-group">
           <label>Email</label>
           <input
             type="email"
@@ -24,7 +36,7 @@ const Register = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label>Password</label>
           <input
             type="password"
@@ -35,7 +47,8 @@ const Register = () => {
         </div>
         <button type="submit">Register</button>
       </form>
-      <p>Already have an account? <Link to="/login">Login</Link></p> {/* Link to the login page */}
+      {successMessage && <p className="success-message">{successMessage}</p>}
+      <p>Already have an account? <a href="/login">Login</a></p>
     </div>
   );
 };

@@ -1,70 +1,53 @@
 // src/components/ReservationForm.js
 import React, { useState } from 'react';
-import { db } from '../firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import { collection, addDoc } from "firebase/firestore";
 
 const ReservationForm = () => {
+  const [reservationType, setReservationType] = useState('Laundry');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [machineId, setMachineId] = useState('');
-  const [type, setType] = useState('laundry');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await addDoc(collection(db, 'reservations'), {
+      await addDoc(collection(db, "reservations"), {
+        reservationType,
         date,
         time,
         machineId,
-        type,
+        userId: auth.currentUser.uid
       });
-      setDate('');
-      setTime('');
-      setMachineId('');
-      setType('laundry');
       alert('Reservation made successfully!');
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error adding reservation: ", error);
       alert('Error making reservation.');
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <h3>Make a Reservation</h3>
+      <h2>Make a Reservation</h2>
       <label>
         Reservation Type:
-        <select value={type} onChange={(e) => setType(e.target.value)}>
-          <option value="laundry">Laundry</option>
-          <option value="sauna">Sauna</option>
+        <select value={reservationType} onChange={(e) => setReservationType(e.target.value)}>
+          <option value="Laundry">Laundry</option>
+          <option value="Sauna">Sauna</option>
         </select>
       </label>
       <label>
         Date:
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-        />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
       </label>
       <label>
         Time:
-        <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          required
-        />
+        <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
       </label>
       <label>
         Machine ID:
-        <input
-          type="text"
-          value={machineId}
-          onChange={(e) => setMachineId(e.target.value)}
-          required
-        />
+        <input type="text" value={machineId} onChange={(e) => setMachineId(e.target.value)} required />
       </label>
       <button type="submit">Reserve</button>
     </form>
