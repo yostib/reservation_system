@@ -1,17 +1,15 @@
-/* src/components/Login.css and src/components/Register.css */
-
+/* src/components/Login.css */
 .auth-container {
     max-width: 400px;
     margin: 0 auto;
     padding: 20px;
     border: 1px solid #ccc;
-    border-radius: 10px;
+    border-radius: 5px;
     background-color: #f9f9f9;
-    text-align: center;
   }
   
   .auth-container h2 {
-    margin-bottom: 20px;
+    text-align: center;
   }
   
   .auth-container form {
@@ -21,7 +19,6 @@
   
   .auth-container .form-group {
     margin-bottom: 15px;
-    text-align: left;
   }
   
   .auth-container input {
@@ -48,7 +45,7 @@
   }
   
   .auth-container p {
-    margin-top: 10px;
+    text-align: center;
   }
   
   .auth-container a {

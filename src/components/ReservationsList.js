@@ -1,20 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { db, auth } from '../firebase';
-import { collection, query, where, getDocs } from "firebase/firestore";
+import React, { useState, useEffect } from "react";
+import { db } from "../firebase"; // Adjust the path as needed
+import { getAuth } from "firebase/auth";
+//import "./ReservationsList.css";
 
 const ReservationsList = () => {
   const [reservations, setReservations] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      setErrorMessage("User not authenticated");
+      return;
+    }
+
     const fetchReservations = async () => {
       try {
-        console.log("Fetching reservations...");
-        const q = query(collection(db, "reservations"), where("userId", "==", auth.currentUser.uid));
-        const querySnapshot = await getDocs(q);
-        const reservationsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log("Reservations fetched: ", reservationsData);
-        setReservations(reservationsData);
+        const querySnapshot = await db
+          .collection("reservations")
+          .where("userId", "==", user.uid)
+          .get();
+
+        const reservationsData = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Filter out past reservations
+        const now = new Date();
+        const filteredReservations = reservationsData.filter(
+          (reservation) =>
+            new Date(`${reservation.date}T${reservation.time}:00`) > now
+        );
+
+        setReservations(filteredReservations);
       } catch (error) {
+        setErrorMessage("Error fetching reservations. Please try again.");
         console.error("Error fetching reservations: ", error);
       }
     };
@@ -23,12 +46,20 @@ const ReservationsList = () => {
   }, []);
 
   return (
-    <div>
+    <div className="reservations-container">
       <h2>Your Reservations</h2>
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
       <ul>
         {reservations.map((reservation) => (
           <li key={reservation.id}>
-            {reservation.reservationType} on {reservation.date} at {reservation.time} (Machine ID: {reservation.machineId})
+            <p>Type: {reservation.type}</p>
+            <p>Date: {reservation.date}</p>
+            <p>Time: {reservation.time}</p>
+            {reservation.type === "Laundry" ? (
+              <p>Machine ID: {reservation.machineId}</p>
+            ) : (
+              <p>Room Number: {reservation.roomNumber}</p>
+            )}
           </li>
         ))}
       </ul>

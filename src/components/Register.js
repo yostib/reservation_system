@@ -1,30 +1,27 @@
-// src/components/Register.js
 import React, { useState } from 'react';
-import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import './Register.css';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import './Register.css'; // Ensure this CSS file exists for styling
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const auth = getAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await auth.createUserWithEmailAndPassword(email, password);
-      setSuccessMessage('Registration successful!');
-      setTimeout(() => {
-        navigate('/login'); // or '/dashboard' based on your flow
-      }, 2000); // Adjust the timeout duration as needed
+      await createUserWithEmailAndPassword(auth, email, password);
+      navigate('/login');
     } catch (error) {
-      console.error("Error registering: ", error.message);
+      setError('Failed to register. Please try again.');
     }
   };
 
   return (
-    <div className="container">
+    <div className="auth-container">
       <h2>Register</h2>
       <form onSubmit={handleRegister}>
         <div className="form-group">
@@ -45,9 +42,9 @@ const Register = () => {
             required
           />
         </div>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
         <button type="submit">Register</button>
       </form>
-      {successMessage && <p className="success-message">{successMessage}</p>}
       <p>Already have an account? <a href="/login">Login</a></p>
     </div>
   );

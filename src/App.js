@@ -1,17 +1,47 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Dashboard from './components/Dashboard';
-import Register from './components/Register';
+// src/App.js
+import React, { useState, useEffect } from 'react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import Login from './components/Login';
+import Register from './components/Register';
+import MakeReservation from './components/ReservationForm';
+import OwnReservations from './components/OwnReservations';
+import './App.css';
 
 function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <Router>
       <div className="App">
+        <nav className="navbar">
+          <Link to="/" className="nav-link">Home</Link>
+          {user ? (
+            <>
+              <Link to="/own-reservations" className="nav-link">My Reservations</Link>
+              <button className="nav-link" onClick={() => getAuth().signOut()}>Logout</button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="nav-link">Login</Link>
+              <Link to="/register" className="nav-link">Register</Link>
+            </>
+          )}
+        </nav>
         <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={user ? <MakeReservation /> : <Navigate to="/login" />} />
+          <Route path="/login" element={<Login setUser={setUser} />} />
+          <Route path="/register" element={<Register setUser={setUser} />} />
+          <Route path="/own-reservations" element={user ? <OwnReservations /> : <Navigate to="/login" />} />
         </Routes>
       </div>
     </Router>

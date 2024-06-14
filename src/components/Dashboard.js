@@ -6,7 +6,7 @@ import ReservationsList from './ReservationsList';
 const Dashboard = () => {
   return (
     <div>
-      <h2>Welcome to the Dashboard!</h2>
+      <h2>Welcome to the Reservations!</h2>
       <ReservationForm />
       <ReservationsList />
     </div>
