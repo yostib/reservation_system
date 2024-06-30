@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -70,17 +68,3 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-=======
-# reservation_system
->>>>>>> 867bca366182dd6ff338831d017e8e53edb9e823
-=======
-# Reservation System
-
-This is a reservation system for laundry and sauna services.
-
-## Local Changes
-Description of local changes...
-
-## Remote Changes
-Description of remote changes...
->>>>>>> fa944c73fdf3e1783c2c07160096b234673a73c0
