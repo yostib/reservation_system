@@ -1,6 +1,6 @@
 # TODO 
  
-- [ ] **Reservation time restriction**
+- [x] **Reservation time restriction**
 
   As a user I should be able to make reservation between 9:00 to 21:00. There should be a time restriction for reservations.  
 
