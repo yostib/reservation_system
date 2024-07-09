@@ -89,6 +89,8 @@ const MakeReservation = () => {
           <input
             type="time"
             value={time}
+            min="09:00"
+            max="21:00"
             onChange={(e) => setTime(e.target.value)}
           />
         </div>
