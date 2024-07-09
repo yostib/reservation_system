@@ -13,6 +13,7 @@ const MakeReservation = () => {
   const [roomNumber, setRoomNumber] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [availableSlots, setAvailableSlots] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -85,14 +86,17 @@ const MakeReservation = () => {
           />
         </div>
         <div className="form-group">
-          <label>Time:</label>
-          <input
-            type="time"
-            value={time}
-            min="09:00"
-            max="21:00"
-            onChange={(e) => setTime(e.target.value)}
-          />
+          <label htmlFor="reservation-time">Time:</label>
+          <select
+              id="reservation-time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+          >
+            <option value="">Select a time slot</option>
+            {availableSlots.map(slot => (
+                <option key={slot} value={slot}>{slot}</option>
+            ))}
+          </select>
         </div>
         {type === "Laundry" && (
           <div className="form-group">
