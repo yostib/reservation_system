@@ -31,8 +31,9 @@ const OwnReservations = () => {
 
       setReservations(userReservations.filter(reservation => {
         const now = new Date();
-        const reservationTime = new Date(`${reservation.date}T${reservation.time}`);
-        return reservationTime > now;
+        const reservationStartTime = new Date(`${reservation.date}T${reservation.startTime}`);
+        const reservationEndTime = new Date(`${reservation.date}T${reservation.endTime}`);
+        return reservationStartTime > now;
       }));
     };
 
@@ -54,7 +55,8 @@ const OwnReservations = () => {
             <div key={reservation.id} className="reservation-item">
               <p>Type: {reservation.type}</p>
               <p>Date: {reservation.date}</p>
-              <p>Time: {reservation.time}</p>
+              <p>Start time: {reservation.startTime}</p>
+              <p>End time: {reservation.endTime}</p>
               {reservation.type === 'Laundry' && <p>Machine ID: {reservation.machineId}</p>}
               {reservation.type === 'Sauna' && <p>Room Number: {reservation.roomNumber}</p>}
             </div>

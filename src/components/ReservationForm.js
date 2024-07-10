@@ -10,7 +10,8 @@ const RESERVATION_SAVE_ERROR = "Error making reservation. Please try again.";
 const MakeReservation = () => {
     const [type, setType] = useState("Laundry");
     const [date, setDate] = useState("");
-    const [time, setTime] = useState("");
+    const [startTime, setStartTime] = useState("");
+    const [endTime, setEndTime] = useState("");
     const [machineId, setMachineId] = useState("");
     const [roomNumber, setRoomNumber] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
@@ -27,14 +28,18 @@ const MakeReservation = () => {
     }
 
     function isFormValid() {
-        if (!type || !date || !time || (!machineId && !roomNumber)) {
+        if (!type || !date || !startTime || !endTime || (!machineId && !roomNumber)) {
             return false;
         }
         return true;
     }
 
-    function getReservationDateTime() {
-        return new Date(`${date}T${time}:00`);
+    function getReservationStartDateTime() {
+        return new Date(`${date}T${startTime}:00`);
+    }
+
+    function getReservationEndDateTime() {
+        return new Date(`${date}T${endTime}:00`);
     }
 
     function isReservationInThePast(reservationDateTime) {
@@ -50,7 +55,8 @@ const MakeReservation = () => {
             userId: user.uid,
             type,
             date,
-            time,
+            startTime: startTime,
+            endTime: endTime,
             machineId,
             roomNumber,
             timestamp: firebase.firestore.Timestamp.fromDate(reservationDateTime),
@@ -61,7 +67,8 @@ const MakeReservation = () => {
         setErrorMessage("");
         setType("Laundry");
         setDate("");
-        setTime("");
+        setStartTime("");
+        setEndTime("");
         setMachineId("");
         setRoomNumber("");
     }
@@ -82,15 +89,21 @@ const MakeReservation = () => {
             return;
         }
 
-        const reservationDateTime = getReservationDateTime();
+        const reservationStartDateTime = getReservationStartDateTime();
 
-        if( isReservationInThePast(reservationDateTime) ) {
+        if( isReservationInThePast(reservationStartDateTime) ) {
             setErrorMessage("Cannot reserve for past times.");
             return;
         }
 
+        const reservationEndDateTime = getReservationEndDateTime();
+
+        if( isReservationInThePast(reservationEndDateTime) ) {
+            setErrorMessage("Cannot reserve for past times.");
+            return;
+        }
         try {
-            addReservationToDB(user, reservationDateTime).then((documentRef) => {
+            addReservationToDB(user, reservationStartDateTime).then((documentRef) => {
                 setSuccessMessage("Reservation made successfully!");
                 resetForm();
             }, (reason) => {
@@ -125,11 +138,24 @@ const MakeReservation = () => {
                     />
                 </div>
                 <div className="form-group">
-                    <label htmlFor="reservation-time">Time:</label>
+                    <label htmlFor="reservation-start-time">Start time:</label>
                     <select
-                        id="reservation-time"
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
+                        id="reservation-start-time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                    >
+                        <option value="">Select a time slot</option>
+                        {availableSlots.map(slot => (
+                            <option key={slot} value={slot}>{slot}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="reservation-end-time">End time:</label>
+                    <select
+                        id="reservation-end-time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
                     >
                         <option value="">Select a time slot</option>
                         {availableSlots.map(slot => (
