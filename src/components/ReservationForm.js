@@ -5,6 +5,8 @@ import firebase from "firebase/compat/app";
 import {getAuth} from "firebase/auth";
 import "./MakeReservation.css";
 
+const RESERVATION_SAVE_ERROR = "Error making reservation. Please try again.";
+
 const MakeReservation = () => {
     const [type, setType] = useState("Laundry");
     const [date, setDate] = useState("");
@@ -19,11 +21,55 @@ const MakeReservation = () => {
         "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30",
         "21:00"];
 
+    function getUser() {
+        const auth = getAuth();
+        return auth.currentUser;
+    }
+
+    function isFormValid() {
+        if (!type || !date || !time || (!machineId && !roomNumber)) {
+            return false;
+        }
+        return true;
+    }
+
+    function getReservationDateTime() {
+        return new Date(`${date}T${time}:00`);
+    }
+
+    function isReservationInThePast(reservationDateTime) {
+        const now = new Date();
+        if (reservationDateTime <= now) {
+            return true;
+        }
+        return false;
+    }
+
+    async function addReservationToDB(user, reservationDateTime) {
+        return await db.collection("reservations").add({
+            userId: user.uid,
+            type,
+            date,
+            time,
+            machineId,
+            roomNumber,
+            timestamp: firebase.firestore.Timestamp.fromDate(reservationDateTime),
+        });
+    }
+
+    function resetForm() {
+        setErrorMessage("");
+        setType("Laundry");
+        setDate("");
+        setTime("");
+        setMachineId("");
+        setRoomNumber("");
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const auth = getAuth();
-        const user = auth.currentUser;
+        const user = getUser();
 
         if (!user) {
             setErrorMessage("User not authenticated");
@@ -31,39 +77,28 @@ const MakeReservation = () => {
             return;
         }
 
-        if (!type || !date || !time || (!machineId && !roomNumber)) {
+        if(!isFormValid()) {
             setErrorMessage("Please fill in all fields.");
             return;
         }
 
-        const reservationDateTime = new Date(`${date}T${time}:00`);
-        const now = new Date();
+        const reservationDateTime = getReservationDateTime();
 
-        if (reservationDateTime <= now) {
+        if( isReservationInThePast(reservationDateTime) ) {
             setErrorMessage("Cannot reserve for past times.");
             return;
         }
 
         try {
-            await db.collection("reservations").add({
-                userId: user.uid,
-                type,
-                date,
-                time,
-                machineId,
-                roomNumber,
-                timestamp: firebase.firestore.Timestamp.fromDate(reservationDateTime),
+            addReservationToDB(user, reservationDateTime).then((documentRef) => {
+                setSuccessMessage("Reservation made successfully!");
+                resetForm();
+            }, (reason) => {
+                setErrorMessage(RESERVATION_SAVE_ERROR);
+                console.error("Error ", reason);
             });
-
-            setSuccessMessage("Reservation made successfully!");
-            setErrorMessage("");
-            setType("Laundry");
-            setDate("");
-            setTime("");
-            setMachineId("");
-            setRoomNumber("");
         } catch (error) {
-            setErrorMessage("Error making reservation. Please try again.");
+            setErrorMessage(RESERVATION_SAVE_ERROR);
             console.error("Error adding reservation: ", error);
         }
     };
