@@ -76,13 +76,34 @@ const MakeReservation = () => {
     const onDateChange = (e) => {
         e.preventDefault();
         let value = e.target.value;
-        setDate(value);
         let today = new Date();
         let startDate = new Date(value);
         if( startDate.getTime() < today.getTime() ){
             setErrorMessage("Date cannot be in the past");
+        } else {
+            setDate(value)
+            setErrorMessage("");
         }
 
+    }
+
+    const onStartTimeChange = (e) => {
+        e.preventDefault();
+        let selectedValue = e.target.value;
+        setStartTime(selectedValue);
+        let selectedTime = new Date(`${date}T${startTime}:00`);
+    }
+
+    const onEndTimeChange = (e) => {
+        e.preventDefault();
+        let selectedEndTimeValue = e.target.value;
+
+        if (selectedEndTimeValue < startTime){
+            setErrorMessage("End time cannot be before start time.");
+        } else {
+            setEndTime(selectedEndTimeValue);
+            setErrorMessage("");
+        }
     }
 
     const handleSubmit = async (e) => {
@@ -155,7 +176,7 @@ const MakeReservation = () => {
                     <select
                         id="reservation-start-time"
                         value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
+                        onChange={onStartTimeChange}
                     >
                         <option value="">Select a time slot</option>
                         {availableSlots.map(slot => (
@@ -168,7 +189,7 @@ const MakeReservation = () => {
                     <select
                         id="reservation-end-time"
                         value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
+                        onChange={onEndTimeChange}
                     >
                         <option value="">Select a time slot</option>
                         {availableSlots.map(slot => (
