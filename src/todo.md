@@ -6,5 +6,6 @@
 
 - [x] **RSRV-0002 : The reservation form should have a half-hour interval**
 
-- [ ] **RSRV-0003 : The smallest amount of time the user should be able to book is one hour.**
+- [x] **RSRV-0003 : Add `startTime` and `endTime` in the form.**
+- [ ] **RSRV-0004 : The smallest amount of time the user should be able to book is one hour.**
 - [ ] **RSRV-0003 : The reservation is missing end time.**
