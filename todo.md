@@ -8,7 +8,8 @@
 
 - [x] **RSRV-0003 : Add `startTime` and `endTime` in the form.**
 - [ ] **RSRV-0004 : Reservation form validation** 
-  - [ ] RSRV-0005 : The `endTime` cannot be before the `startTime`. 
+  - [ ] RSRV-0005 : The `endTime` cannot be before the `startTime`.
+    - [ ] Validate the date. Date cannot be in the past.
   - [ ] RSRV-0006 : The smallest amount of time the user should be able to book is one hour.
   - [ ] RSRV-0007 : The laundry machine ID should be a dropdown select. (This task still needs to be refined)
   - [ ] RSRV-0008 : The available slot for laundry should be displayed per machine selection. Example, one machine could be available for booking when the other is all booked.
