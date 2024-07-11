@@ -146,6 +146,7 @@ const MakeReservation = () => {
                     <input
                         type="date"
                         value={date}
+                        min={new Date().toISOString().split("T")[0]}
                         onChange={onDateChange}
                     />
                 </div>
