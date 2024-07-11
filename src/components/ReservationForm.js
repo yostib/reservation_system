@@ -73,6 +73,18 @@ const MakeReservation = () => {
         setRoomNumber("");
     }
 
+    const onDateChange = (e) => {
+        e.preventDefault();
+        let value = e.target.value;
+        setDate(value);
+        let today = new Date();
+        let startDate = new Date(value);
+        if( startDate.getTime() < today.getTime() ){
+            setErrorMessage("Date cannot be in the past");
+        }
+
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -134,7 +146,7 @@ const MakeReservation = () => {
                     <input
                         type="date"
                         value={date}
-                        onChange={(e) => setDate(e.target.value)}
+                        onChange={onDateChange}
                     />
                 </div>
                 <div className="form-group">
