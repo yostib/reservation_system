@@ -42,6 +42,10 @@ const MakeReservation = () => {
         return new Date(`${date}T${endTime}:00`);
     }
 
+    function getReservationDateTime() {
+        return new Date(`${date}T${time}:00`);
+    }
+
     function isReservationInThePast(reservationDateTime) {
         const now = new Date();
         if (reservationDateTime <= now) {
