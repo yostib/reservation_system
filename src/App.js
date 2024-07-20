@@ -6,6 +6,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import MakeReservation from './components/ReservationForm';
 import OwnReservations from './components/OwnReservations';
+import Calendar from "./components/Calendar";
 import './App.css';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
           {user ? (
             <>
               <Link to="/own-reservations" className="nav-link">My Reservations</Link>
+              <Link to="/reserve" className="nav-link" >Reserve</Link>
               <button className="nav-link" onClick={() => getAuth().signOut()}>Logout</button>
             </>
           ) : (
@@ -38,7 +40,8 @@ function App() {
           )}
         </nav>
         <Routes>
-          <Route path="/" element={user ? <MakeReservation /> : <Navigate to="/login" />} />
+          <Route path="/" element={<Calendar/>}/>
+          <Route path="/reserve" element={user ? <MakeReservation /> : <Navigate to="/login" />} />
           <Route path="/login" element={<Login setUser={setUser} />} />
           <Route path="/register" element={<Register setUser={setUser} />} />
           <Route path="/own-reservations" element={user ? <OwnReservations /> : <Navigate to="/login" />} />
