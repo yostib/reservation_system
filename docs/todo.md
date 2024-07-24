@@ -2,6 +2,9 @@
 
 * Login is only required when booking from own device.
 * Signage display at the locations allow booking without login.
+* Show booking calendar in home page.
+
+![A draft scratch of the booking calendar view.](booking-calander-view-scratch.jpg)
 
 # TODO 
  
