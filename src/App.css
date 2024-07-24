@@ -50,3 +50,11 @@ button.nav-link {
 button.nav-link:hover {
   background-color: #45a049; /* Same hover background color as links */
 }
+
+.slot-selected {
+  background-color: #45a049;
+}
+
+.slot-deselected {
+  background-color: #0091ff;
+}
