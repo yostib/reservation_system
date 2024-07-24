@@ -3,7 +3,7 @@ import * as PropTypes from "prop-types";
 const weekDays = ["Mon", "Tus", "Wed", "Thu", "Fri", "Sat", "Sun"]
 const hoursOfTheDays = ["09:00", "10:00", "11:00", "12:00",
     "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00",
-    "20:00", "21:00"]
+    "20:00" ]
 
 const generateHeaders = (day) => {
     return (<th key={day}>{day}</th>)
@@ -32,12 +32,11 @@ const generateBodyRows = (hour) => {
 
 const Calendar = (props) => {
     return (<div>
-        <div>The calendar</div>
         <div id="calendar-table-container">
             <table>
                 <thead>
                 <tr>
-                    <th></th>
+                    <th>Start Time</th>
                     {weekDays.map(generateHeaders)}
                 </tr>
                 </thead>
