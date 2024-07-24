@@ -26,8 +26,9 @@
 - [ ] **RSRV-0011 : The reservation is missing end time.**
 - [ ] **RSRV-0012 : Create a home view (the first thing the user sees) which displays the booking calendar. It shows booked and available slots.**
     - [ ] RSRV-0013 : Fetch timetable one week at a time
-    - [ ] RSRV-0018 : Create bare-bone calendar view.
+    - [x] RSRV-0018 : Create bare-bone calendar view.
     - [ ] RSRV-0014 : Show the available slots as interactive (selectable) UI elements.
     - [ ] RSRV-0015 : Show already booked slots as grayed-out/disabled/unselectable UI elements.
+    - [ ] RSRV-0019 : Show confirmation dialog when user clicks reserve button.
 - [ ] **RSRV-0016 : Create responsive booking calendar view for mobile users.**
 - [ ] **RSRV-0017 : Use data models to create objects with them.**
