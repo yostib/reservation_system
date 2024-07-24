@@ -46,6 +46,10 @@ const generateBodyRows = (hour) => {
     </tr>)
 }
 
+const showConfirmationDialog = (e) => {
+    console.log("Dialog!")
+}
+
 const Calendar = (props) => {
     return (<div>
         <div id="calendar-table-container">
@@ -63,7 +67,7 @@ const Calendar = (props) => {
                 </table>
             </div>
             <div className="form-group">
-                <button className="reserve-button">Reserve</button>
+                <button className="reserve-button" onClick={showConfirmationDialog}>Reserve</button>
             </div>
         </div>
 
