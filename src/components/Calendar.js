@@ -70,12 +70,6 @@ const Calendar = (props) => {
     </div>);
 }
 
-// practice
-// a function called subtraction
-// takes two arguments that are numbers
-// call it/ use it
-
-
 Calendar.propTypes = {children: PropTypes.node};
 
 export default Calendar;
