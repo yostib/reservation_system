@@ -1,8 +1,9 @@
 import * as PropTypes from "prop-types";
-import {useRef} from "react";
+import {useRef, useState} from "react";
 
 const Calendar = (props) => {
     const confirmationDialogRef = useRef(null);
+    const [selected, setSelected] = useState([]);
 
     const weekDays = ["Mon", "Tus", "Wed", "Thu", "Fri", "Sat", "Sun"]
     const hoursOfTheDays = ["09:00", "10:00", "11:00", "12:00",
@@ -55,6 +56,15 @@ const Calendar = (props) => {
         confirmationDialogRef.current.showModal();
     }
 
+    function reserveConfirmed() {
+        console.log("Reservation sent to the server");
+        closeDialog();
+    }
+
+    function closeDialog() {
+        confirmationDialogRef.current.close();
+    }
+
     return (<div>
         <div id="calendar-table-container">
             <div className="form-group">
@@ -74,10 +84,14 @@ const Calendar = (props) => {
                 <button className="reserve-button" onClick={showConfirmationDialog}>Reserve</button>
             </div>
         </div>
-        <div id="dialog-container">
+        <div id="dialog-container" className="dialog-container">
             <dialog ref={confirmationDialogRef}>
                 <div>
                     The Dialog!
+                </div>
+                <div className="dialog-button-container">
+                    <button className="secondary-button dialog-button" onClick={closeDialog}>Cancel</button>
+                    <button className="primary-button dialog-button" onClick={reserveConfirmed}>Confirm</button>
                 </div>
             </dialog>
         </div>
