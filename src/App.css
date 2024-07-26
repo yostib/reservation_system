@@ -58,3 +58,29 @@ button.nav-link:hover {
 .slot-deselected {
   background-color: #0091ff;
 }
+
+.primary-button {
+
+}
+
+.secondary-button {
+  background-color: #cbdcfa;
+  color: #333333;
+}
+
+.dialog-container {
+  width: 50%;
+}
+
+dialog {
+  width: inherit;
+}
+
+.dialog-button {
+  margin: 8px;
+}
+
+.dialog-button-container {
+  display: flex;
+  justify-content: flex-end;
+}
