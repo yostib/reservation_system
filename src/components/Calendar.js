@@ -1,56 +1,60 @@
 import * as PropTypes from "prop-types";
-
-const weekDays = ["Mon", "Tus", "Wed", "Thu", "Fri", "Sat", "Sun"]
-const hoursOfTheDays = ["09:00", "10:00", "11:00", "12:00",
-    "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00",
-    "20:00"]
-
-const generateHeaders = (day) => {
-    return (<th key={day}>{day}</th>)
-}
-
-const generateSlots = (hour) => {
-    return weekDays.map((day) => {
-        return (
-            <td>
-                <button key={`${day}-${hour}`} value={`${day}-${hour}`} onClick={setReserved}>Available</button>
-            </td>
-        )
-    })
-}
-
-const setReserved = (e) => {
-    let currentClassName = e.target.className;
-    switch (currentClassName) {
-        case "slot-selected":
-            e.target.className = "slot-deselected";
-            e.target.innerHTML = "Available"
-            break;
-        case "":
-            e.target.className = "slot-selected";
-            e.target.innerHTML = "Selected"
-            break;
-        case "slot-deselected":
-            e.target.className = "slot-selected";
-            e.target.innerHTML = "Selected"
-            break;
-        default:
-            break;
-    }
-}
-
-const generateBodyRows = (hour) => {
-    return (<tr>
-        <td key={hour}>{hour}</td>
-        {generateSlots(hour)}
-    </tr>)
-}
-
-const showConfirmationDialog = (e) => {
-    console.log("Dialog!")
-}
+import {useRef} from "react";
 
 const Calendar = (props) => {
+    const confirmationDialogRef = useRef(null);
+
+    const weekDays = ["Mon", "Tus", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    const hoursOfTheDays = ["09:00", "10:00", "11:00", "12:00",
+        "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00",
+        "20:00"]
+
+    const generateHeaders = (day) => {
+        return (<th key={day}>{day}</th>)
+    }
+
+    const generateSlots = (hour) => {
+        return weekDays.map((day) => {
+            return (
+                <td>
+                    <button key={`${day}-${hour}`} value={`${day}-${hour}`} onClick={setReserved}>Available</button>
+                </td>
+            )
+        })
+    }
+
+    const setReserved = (e) => {
+        let currentClassName = e.target.className;
+        switch (currentClassName) {
+            case "slot-selected":
+                e.target.className = "slot-deselected";
+                e.target.innerHTML = "Available"
+                break;
+            case "":
+                e.target.className = "slot-selected";
+                e.target.innerHTML = "Selected"
+                break;
+            case "slot-deselected":
+                e.target.className = "slot-selected";
+                e.target.innerHTML = "Selected"
+                break;
+            default:
+                break;
+        }
+    }
+
+    const generateBodyRows = (hour) => {
+        return (<tr>
+            <td key={hour}>{hour}</td>
+            {generateSlots(hour)}
+        </tr>)
+    }
+
+    const showConfirmationDialog = (e) => {
+        console.log("Dialog!")
+        confirmationDialogRef.current.showModal();
+    }
+
     return (<div>
         <div id="calendar-table-container">
             <div className="form-group">
@@ -69,6 +73,13 @@ const Calendar = (props) => {
             <div className="form-group">
                 <button className="reserve-button" onClick={showConfirmationDialog}>Reserve</button>
             </div>
+        </div>
+        <div id="dialog-container">
+            <dialog ref={confirmationDialogRef}>
+                <div>
+                    The Dialog!
+                </div>
+            </dialog>
         </div>
 
     </div>);
