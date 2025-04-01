@@ -15,7 +15,7 @@ const Login = ({ setUser }) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       setUser(userCredential.user);
-      navigate('/');
+      navigate('/dashboard');
     } catch (error) {
       setError('Failed to log in. Please check your credentials and try again.');
     }
@@ -26,7 +26,7 @@ const Login = ({ setUser }) => {
       <h2>Login</h2>
       <form onSubmit={handleLogin}>
         <div className="form-group">
-          <label>Email</label>
+          <label>User name</label>
           <input
             type="email"
             value={email}

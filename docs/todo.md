@@ -24,11 +24,16 @@
   - [ ] RSRV-0009 : The sauna room number should be a dropdown select.
   - [ ] RSRV-0010 : The available slot for sauna should be displayed per room selection.
 - [ ] **RSRV-0011 : The reservation is missing end time.**
-- [ ] **RSRV-0012 : Create a home view (the first thing the user sees) which displays the booking calendar. It shows booked and available slots.**
+- [ ] **RSRV-0012 : Create a home view (the first thing the user sees should be a login) the user should login to access the time booking.**
     - [ ] RSRV-0013 : Fetch timetable one week at a time
     - [x] RSRV-0018 : Create bare-bone calendar view.
     - [ ] RSRV-0014 : Show the available slots as interactive (selectable) UI elements.
     - [ ] RSRV-0015 : Show already booked slots as grayed-out/disabled/unselectable UI elements.
     - [ ] RSRV-0019 : Show confirmation dialog when user clicks reserve button.
 - [ ] **RSRV-0016 : Create responsive booking calendar view for mobile users.**
+
 - [ ] **RSRV-0017 : Use data models to create objects with them.**
+- [ ] **RSRV-0018 : Modified routing and the first page to be displayed to be login.**
+- [ ] **RSRV-0019 : More on routing modified the Dashboard to be user-specific with styling and options.**
+- [ ] **RSRV-0020 : More on routing after Dashboard the booking calendar is displayed.**
+- 

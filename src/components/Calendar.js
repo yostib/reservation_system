@@ -87,7 +87,7 @@ const Calendar = (props) => {
         <div id="dialog-container" className="dialog-container">
             <dialog ref={confirmationDialogRef}>
                 <div>
-                    The Dialog!
+                   Ready for booking !
                 </div>
                 <div className="dialog-button-container">
                     <button className="secondary-button dialog-button" onClick={closeDialog}>Cancel</button>
