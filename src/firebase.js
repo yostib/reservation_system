@@ -1,7 +1,15 @@
 // src/firebase.js
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    query,
+    where,
+    onSnapshot,
+    getDocs  // Add this import
+} from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBVLEv2juwZk7EF0Fyo24Jo6Ft4bJ7gsd8",
@@ -11,13 +19,23 @@ const firebaseConfig = {
     messagingSenderId: "324248991770",
     appId: "1:324248991770:web:b185da94156668297879a3",
     measurementId: "G-EB4971YV43"
-  };
+};
 
- // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-// Export auth and db
-const auth = firebase.auth();
-const db = firebase.firestore();
+// Initialize services
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-export { auth, db };
+// Export all Firestore functions you need
+export {
+    auth,
+    db,
+    collection,
+    addDoc,
+    query,
+    where,
+    onSnapshot,
+    getDocs  // Export getDocs
+};
