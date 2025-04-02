@@ -84,6 +84,12 @@ dialog {
   display: flex;
   justify-content: flex-end;
 }
+.app-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
 
 
