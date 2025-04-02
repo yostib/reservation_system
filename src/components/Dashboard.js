@@ -1,87 +1,112 @@
 // src/components/Dashboard.js
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAuth, signOut } from 'firebase/auth';
+import {
+    collection,
+    query,
+    where,
+    onSnapshot,
+    deleteDoc,
+    doc
+} from 'firebase/firestore';
+import { db, auth } from '../firebase';
 import './Dashboard.css';
 
 const Dashboard = ({ user }) => {
+    const [upcomingBookings, setUpcomingBookings] = useState([]);
+    const [loadingBookings, setLoadingBookings] = useState(true);
     const navigate = useNavigate();
-    const [darkMode, setDarkMode] = useState(false);
-    const [reservations, setReservations] = useState([]);
-    const auth = getAuth();
 
-    // Sample reservation data - replace with your actual data fetching
     useEffect(() => {
-        const sampleReservations = [
-            { id: 1, facility: 'Laundry', date: '2023-11-20', time: '14:00 - 16:00' },
-            { id: 2, facility: 'Sauna', date: '2023-11-22', time: '18:00 - 19:00' }
-        ];
-        setReservations(sampleReservations);
-    }, []);
+        if (!user?.uid) {
+            navigate('/login');
+            return;
+        }
 
-    const handleLogout = () => {
-        signOut(auth).then(() => navigate('/login'));
+        const q = query(
+            collection(db, "bookings"),
+            where("userId", "==", user.uid),
+            where("date", ">=", new Date().toISOString().split('T')[0])
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const bookings = [];
+            snapshot.forEach((doc) => {
+                bookings.push({ id: doc.id, ...doc.data() });
+            });
+            setUpcomingBookings(bookings);
+            setLoadingBookings(false);
+        });
+
+        return () => unsubscribe();
+    }, [user?.uid, navigate]);
+
+    const handleLogout = async () => {
+        try {
+            await auth.signOut();
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
+    };
+
+    const cancelBooking = async (bookingId) => {
+        if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+
+        try {
+            await deleteDoc(doc(db, "bookings", bookingId));
+        } catch (error) {
+            console.error("Error cancelling booking:", error);
+            alert("Failed to cancel booking");
+        }
     };
 
     return (
-        <div className={`dashboard-container ${darkMode ? 'dark-mode' : ''}`}>
+        <div className="dashboard-container">
             <div className="dashboard-header">
-                <div className="header-controls">
-                    <button
-                        className="dark-mode-toggle"
-                        onClick={() => setDarkMode(!darkMode)}
-                    >
-                        {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
-                    </button>
-                    <button className="logout-button" onClick={handleLogout}>
-                        Log Out
-                    </button>
-                </div>
-
-                <h1>Welcome back, <span className="user-email">{user?.email || 'Guest'}</span>!</h1>
-                <p className="welcome-message">What would you like to book today?</p>
+                <h1>Welcome, {user?.email || 'User'}!</h1>
+                <button onClick={handleLogout} className="logout-button">
+                    Log Out
+                </button>
             </div>
 
-            <div className="booking-options">
-                <div className="option-card" onClick={() => navigate('/book/laundry')}>
-                    <div className="option-icon">🧺</div>
-                    <h3>Laundry Room</h3>
-                    <p>Book a time slot for washing</p>
-                    <button className="book-button">Book Now</button>
-                </div>
-
-                <div className="option-card" onClick={() => navigate('/book/sauna')}>
-                    <div className="option-icon">🧖</div>
-                    <h3>Sauna</h3>
-                    <p>Reserve your relaxation time</p>
-                    <button className="book-button">Book Now</button>
+            <div className="facility-selection">
+                <h2>Select a Facility to Book</h2>
+                <div className="facility-options">
+                    <div className="facility-card" onClick={() => navigate('/book/laundry')}>
+                        <h3>Laundry Room</h3>
+                        <button className="book-button">Book Now</button>
+                    </div>
+                    <div className="facility-card" onClick={() => navigate('/book/sauna')}>
+                        <h3>Sauna</h3>
+                        <button className="book-button">Book Now</button>
+                    </div>
                 </div>
             </div>
 
-            <div className="recent-bookings">
-                <h3>Your Upcoming Reservations</h3>
-                {reservations.length > 0 ? (
-                    <ul className="reservation-list">
-                        {reservations.map(res => (
-                            <li key={res.id} className="reservation-item">
-                <span className="facility-icon">
-                  {res.facility === 'Laundry' ? '🧺' : '🧖'}
-                </span>
-                                <div className="reservation-details">
-                                    <span className="facility-name">{res.facility}</span>
-                                    <span className="reservation-time">{res.date} • {res.time}</span>
+            <div className="bookings-section">
+                <h2>Your Upcoming Reservations</h2>
+                {loadingBookings ? (
+                    <p>Loading your bookings...</p>
+                ) : upcomingBookings.length === 0 ? (
+                    <p>You have no upcoming reservations</p>
+                ) : (
+                    <div className="bookings-list">
+                        {upcomingBookings.map(booking => (
+                            <div key={booking.id} className="booking-card">
+                                <div className="booking-info">
+                                    <h3>{booking.facility === 'laundry' ? 'Laundry Room' : 'Sauna'}</h3>
+                                    <p>{new Date(booking.date).toLocaleDateString()} at {booking.time}</p>
+                                    <p>Status: {booking.status}</p>
                                 </div>
                                 <button
+                                    onClick={() => cancelBooking(booking.id)}
                                     className="cancel-button"
-                                    onClick={() => console.log('Cancel reservation', res.id)}
                                 >
                                     Cancel
                                 </button>
-                            </li>
+                            </div>
                         ))}
-                    </ul>
-                ) : (
-                    <p className="no-reservations">You have no upcoming reservations</p>
+                    </div>
                 )}
             </div>
         </div>
