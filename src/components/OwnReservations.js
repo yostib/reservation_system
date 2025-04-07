@@ -1,73 +1,109 @@
-// src/components/OwnReservations.js
-import React, { useEffect, useState } from 'react';
-import { getAuth, signOut } from 'firebase/auth';
-import { db } from '../firebase';
-import './OwnReservations.css';
+// src/components/BookingsPage.js
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { db } from '../firebase';
+import { FaTshirt, FaHotTub, FaCheck, FaClock, FaArrowLeft } from 'react-icons/fa';
+import { ThreeDots } from 'react-loader-spinner';
+import './BookingsPage.css';
 
-const OwnReservations = () => {
-  const [reservations, setReservations] = useState([]);
+const BookingsPage = ({ user }) => {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const auth = getAuth();
-    const user = auth.currentUser;
+    if (!user?.uid) return;
 
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+    const now = new Date();
+    const oneMonthFromNow = new Date();
+    oneMonthFromNow.setMonth(now.getMonth() + 1);
 
-    const fetchReservations = async () => {
-      const snapshot = await db
-        .collection('reservations')
-        .where('userId', '==', user.uid)
-        .get();
+    const bookingsRef = collection(db, "bookings");
+    const q = query(
+        bookingsRef,
+        where("userId", "==", user.uid),
+        where("date", ">=", now.toISOString().split('T')[0]),
+        where("date", "<=", oneMonthFromNow.toISOString().split('T')[0]),
+        orderBy("date"),
+        orderBy("time")
+    );
 
-      const userReservations = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) {
+        setBookings([]);
+      } else {
+        const bookingsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          status: getBookingStatus(doc.data().date, doc.data().time)
+        }));
+        setBookings(bookingsData);
+      }
+      setLoading(false);
+    });
 
-      setReservations(userReservations.filter(reservation => {
-        const now = new Date();
-        const reservationStartTime = new Date(`${reservation.date}T${reservation.startTime}`);
-        const reservationEndTime = new Date(`${reservation.date}T${reservation.endTime}`);
-        return reservationStartTime > now;
-      }));
-    };
+    return () => unsubscribe();
+  }, [user]);
 
-    fetchReservations();
-  }, [navigate]);
+  const getBookingStatus = (date, time) => {
+    const bookingDateTime = new Date(`${date}T${time}`);
+    return bookingDateTime < new Date() ? 'passed' : 'upcoming';
+  };
 
-  const handleLogout = async () => {
-    const auth = getAuth();
-    await signOut(auth);
-    navigate('/login');
+  const formatDate = (dateString) => {
+    const options = { weekday: 'short', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
   return (
-    <div className="container">
-      <h2>My Reservations</h2>
-      <div className="reservation-list">
-        {reservations.length > 0 ? (
-          reservations.map((reservation) => (
-            <div key={reservation.id} className="reservation-item">
-              <p>Type: {reservation.type}</p>
-              <p>Date: {reservation.date}</p>
-              <p>Start time: {reservation.startTime}</p>
-              <p>End time: {reservation.endTime}</p>
-              {reservation.type === 'Laundry' && <p>Machine ID: {reservation.machineId}</p>}
-              {reservation.type === 'Sauna' && <p>Room Number: {reservation.roomNumber}</p>}
+      <div className="bookings-page">
+        <header className="bookings-header">
+          <button onClick={() => navigate('/dashboard')} className="back-button">
+            <FaArrowLeft /> Back to Dashboard
+          </button>
+          <h1>Your Bookings</h1>
+        </header>
+
+        {loading ? (
+            <div className="loading-state">
+              <ThreeDots color="#4CAF50" height={50} width={50} />
+              <p>Loading your bookings...</p>
             </div>
-          ))
+        ) : bookings.length === 0 ? (
+            <div className="no-bookings">
+              <p>No bookings found for the next month.</p>
+            </div>
         ) : (
-          <p>No upcoming reservations</p>
+            <div className="bookings-list">
+              <div className="bookings-list-header">
+                <span>Facility</span>
+                <span>Date & Time</span>
+                <span>Status</span>
+              </div>
+              {bookings.map(booking => (
+                  <div key={booking.id} className={`booking-item ${booking.status}`}>
+                    <div className="facility-info">
+                      {booking.facility === 'laundry' ? <FaTshirt /> : <FaHotTub />}
+                      <span>{booking.facility.charAt(0).toUpperCase() + booking.facility.slice(1)}</span>
+                    </div>
+                    <div className="booking-time">
+                      {formatDate(booking.date)} at {booking.time}
+                    </div>
+                    <div className="booking-status">
+                      {booking.status === 'upcoming' ? (
+                          <FaClock className="upcoming-icon" />
+                      ) : (
+                          <FaCheck className="passed-icon" />
+                      )}
+                      <span>{booking.status === 'passed' ? 'Completed' : 'Upcoming'}</span>
+                    </div>
+                  </div>
+              ))}
+            </div>
         )}
       </div>
-      <button className="logout-button" onClick={handleLogout}>Logout</button>
-    </div>
   );
 };
 
-export default OwnReservations;
+export default BookingsPage;

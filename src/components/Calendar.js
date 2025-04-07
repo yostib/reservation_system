@@ -1,257 +1,181 @@
-import { useState, useEffect, useRef } from 'react';
-import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-    collection, query, where, onSnapshot,
-    writeBatch, doc, getDocs, deleteDoc,
-    serverTimestamp
+    collection, query, where, getDocs, writeBatch, doc, serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import Loader from './Loader';
 import './Calendar.css';
 
-const Calendar = ({ userId }) => {
-    const [selectedSlots, setSelectedSlots] = useState([]);
+const HOURS = Array.from({ length: 13 }, (_, i) => 8 + i); // 8:00 to 20:00
+
+const Calendar = ({ user }) => {
+    const navigate = useNavigate();
+    const [facility, setFacility] = useState('laundry');
     const [bookings, setBookings] = useState([]);
-    const [userBookings, setUserBookings] = useState([]);
-    const [bookingsThisWeek, setBookingsThisWeek] = useState(0);
+    const [selectedSlots, setSelectedSlots] = useState([]);
     const [loading, setLoading] = useState(true);
-    const confirmationDialogRef = useRef(null);
-    const [weekDates, setWeekDates] = useState([]);
+    const [error, setError] = useState(null);
+    const [weekOffset, setWeekOffset] = useState(0);
+    const [weeklyUserHours, setWeeklyUserHours] = useState(0);
 
-    // Generate current week dates with actual dates
-    const generateWeekDates = () => {
-        const dates = [];
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        const startDate = new Date(today);
-        startDate.setDate(today.getDate() - dayOfWeek); // Start from Sunday
+    const FACILITY_LIMIT = facility === 'laundry' ? 4 : 1;
 
-        for (let i = 0; i < 7; i++) {
-            const date = new Date(startDate);
-            date.setDate(startDate.getDate() + i);
-            dates.push(date);
+    useEffect(() => {
+        if (!user) {
+            navigate('/login');
+            return;
         }
-        return dates;
+
+        const fetchBookings = async () => {
+            try {
+                setLoading(true);
+                const q = query(
+                    collection(db, "bookings"),
+                    where("facility", "==", facility),
+                    where("status", "==", "confirmed")
+                );
+
+                const querySnapshot = await getDocs(q);
+                const bookingsData = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                setBookings(bookingsData);
+                setError(null);
+
+                const userBookingsThisWeek = getUserWeeklyHours(bookingsData);
+                setWeeklyUserHours(userBookingsThisWeek);
+            } catch (err) {
+                console.error("Firestore error:", err);
+                setError("Failed to load availability. Please refresh and try again.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBookings();
+    }, [user, facility, navigate]);
+
+    const getWeekDates = () => {
+        const start = new Date();
+        start.setDate(start.getDate() + weekOffset * 7);
+        return Array.from({ length: 7 }, (_, i) => {
+            const date = new Date(start);
+            date.setDate(start.getDate() + i);
+            return date;
+        });
     };
 
-    // Initialize week dates
-    useEffect(() => {
-        setWeekDates(generateWeekDates());
-    }, []);
-
-    // Load all bookings and user bookings
-    useEffect(() => {
-        if (!userId) return;
-
-        setLoading(true);
-        const bookingsRef = collection(db, "bookings");
-        const userQ = query(bookingsRef, where("userId", "==", userId));
-        const allQ = query(bookingsRef);
-
-        const unsubscribeUser = onSnapshot(userQ, (snapshot) => {
-            const userBookingsData = [];
-            snapshot.forEach((doc) => {
-                userBookingsData.push({ id: doc.id, ...doc.data() });
-            });
-            setUserBookings(userBookingsData);
-            calculateWeeklyBookings(userBookingsData);
-        });
-
-        const unsubscribeAll = onSnapshot(allQ, (snapshot) => {
-            const allBookingsData = [];
-            snapshot.forEach((doc) => {
-                allBookingsData.push({ id: doc.id, ...doc.data() });
-            });
-            setBookings(allBookingsData);
-            setLoading(false);
-        });
-
-        return () => {
-            unsubscribeUser();
-            unsubscribeAll();
-        };
-    }, [userId]);
-
-    // Calculate weekly bookings for the user
-    const calculateWeeklyBookings = (bookings) => {
+    const getUserWeeklyHours = (data = bookings) => {
         const now = new Date();
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - now.getDay());
-        startOfWeek.setHours(0, 0, 0, 0);
 
-        const weeklyBookings = bookings.filter(booking => {
-            const bookingDate = new Date(booking.date);
-            return bookingDate >= startOfWeek;
-        });
-
-        // Calculate total hours booked this week
-        const totalHours = weeklyBookings.reduce((sum, booking) => {
-            return sum + (booking.duration || 1); // Default to 1 hour if duration not set
-        }, 0);
-
-        setBookingsThisWeek(totalHours);
+        return data.filter(b =>
+            b.userId === user.uid &&
+            b.facility === facility &&
+            new Date(b.date) >= startOfWeek
+        ).length;
     };
 
-    // Check if time is in the past
-    const isPastTime = (date, hour) => {
-        const now = new Date();
-        const slotTime = new Date(date);
-        const [hours, minutes] = hour.split(':').map(Number);
-        slotTime.setHours(hours, minutes, 0, 0);
-        return slotTime < now;
-    };
-
-    // Check if slot is booked
-    const isSlotBooked = (date, hour) => {
-        const slotKey = `${date.toDateString()}-${hour}`;
-        return bookings.some(booking => booking.slotKey === slotKey);
-    };
-
-    // Handle slot selection
     const handleSlotClick = (date, hour) => {
-        if (isPastTime(date, hour)) return;
-
         const slotKey = `${date.toDateString()}-${hour}`;
+        const isBooked = bookings.some(booking => booking.slotKey === slotKey);
+        const alreadySelected = selectedSlots.some(slot => slot.slotKey === slotKey);
 
-        // Check if already booked by someone
-        if (isSlotBooked(date, hour)) {
-            alert("This time slot is already booked");
+        if (isBooked || alreadySelected) return;
+
+        const totalAfterSelect = weeklyUserHours + selectedSlots.length;
+
+        if (totalAfterSelect >= FACILITY_LIMIT) {
+            alert(`You can only book ${FACILITY_LIMIT} hour(s) per week for ${facility}.`);
             return;
         }
 
-        // Check if already selected
-        if (selectedSlots.includes(slotKey)) {
-            setSelectedSlots(prev => prev.filter(s => s !== slotKey));
-            return;
-        }
-
-        // Check weekly booking limit
-        if (bookingsThisWeek + selectedSlots.length + 1 > 4) {
-            alert("You've reached your weekly booking limit of 4 hours");
-            return;
-        }
-
-        setSelectedSlots(prev => [...prev, slotKey]);
+        setSelectedSlots(prev => [...prev, { date, hour, slotKey }]);
     };
 
-    // Confirm reservation
-    const confirmReservation = async () => {
+    const confirmBooking = async () => {
         try {
             const batch = writeBatch(db);
-            const bookingsRef = collection(db, "bookings");
 
-            // First verify all slots are still available
-            for (const slotKey of selectedSlots) {
-                const [dateStr, time] = slotKey.split('-');
-                if (isSlotBooked(new Date(dateStr), time)) {
-                    throw new Error(`Time slot ${slotKey} was just booked by someone else`);
-                }
-            }
-
-            // Create all bookings in batch
-            selectedSlots.forEach(slotKey => {
-                const [dateStr, time] = slotKey.split('-');
-                const bookingRef = doc(bookingsRef);
+            selectedSlots.forEach(slot => {
+                const bookingRef = doc(collection(db, "bookings"));
                 batch.set(bookingRef, {
-                    slotKey,
-                    date: dateStr,
-                    time,
-                    userId,
-                    facility: 'laundry', // or get from props
-                    duration: 1, // 1 hour per slot
+                    slotKey: slot.slotKey,
+                    date: slot.date.toDateString(),
+                    time: `${slot.hour}:00`,
+                    userId: user.uid,
+                    facility,
+                    duration: 1,
                     status: 'confirmed',
                     createdAt: serverTimestamp()
                 });
             });
 
             await batch.commit();
+            alert("Booking confirmed!");
             setSelectedSlots([]);
-            closeDialog();
-            alert("Booking confirmed successfully!");
-        } catch (error) {
-            console.error("Booking error:", error);
-            alert(`Booking failed: ${error.message}`);
+            navigate('/bookings');
+        } catch (err) {
+            console.error("Booking error:", err);
+            alert(`Booking failed: ${err.message}`);
         }
     };
 
-    // Cancel a booking
-    const cancelBooking = async (bookingId) => {
-        if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+    if (loading) return <Loader fullPage={true} />;
+    if (error) return <div className="error-message">{error}</div>;
 
-        try {
-            await deleteDoc(doc(db, "bookings", bookingId));
-            alert("Booking cancelled successfully");
-        } catch (error) {
-            console.error("Error cancelling booking:", error);
-            alert("Failed to cancel booking");
-        }
-    };
-
-    const openDialog = () => {
-        if (selectedSlots.length === 0) {
-            alert("Please select at least one time slot");
-            return;
-        }
-        confirmationDialogRef.current.showModal();
-    };
-
-    const closeDialog = () => {
-        confirmationDialogRef.current.close();
-    };
-
-    if (loading) {
-        return <div className="loading">Loading calendar data...</div>;
-    }
+    const weekDates = getWeekDates();
+    const progress = ((weeklyUserHours + selectedSlots.length) / FACILITY_LIMIT) * 100;
 
     return (
         <div className="calendar-container">
-            <h2>Weekly Booking Calendar</h2>
-
-            <div className="week-navigation">
-                <button onClick={() => setWeekDates(generateWeekDates())}>
-                    Current Week
-                </button>
+            <div className="calendar-header">
+                <h2>Book {facility}</h2>
+                <select
+                    value={facility}
+                    onChange={(e) => {
+                        setFacility(e.target.value);
+                        setSelectedSlots([]);
+                    }}
+                    className="facility-select"
+                >
+                    <option value="laundry">Laundry Room</option>
+                    <option value="sauna">Sauna</option>
+                </select>
+                <div className="week-navigation">
+                    <button onClick={() => setWeekOffset(prev => prev - 1)}>← Previous</button>
+                    <button onClick={() => setWeekOffset(prev => prev + 1)}>Next →</button>
+                </div>
             </div>
 
-            <div className="booking-info">
-                <p>Booked this week: {bookingsThisWeek}/4 hours</p>
-                <p>Selected: {selectedSlots.length} hours</p>
+            <div className="progress-wrapper">
+                <label>{weeklyUserHours + selectedSlots.length} / {FACILITY_LIMIT} hour(s) used this week</label>
+                <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${progress}%` }} />
+                </div>
             </div>
 
             <div className="calendar-grid">
-                <div className="time-column">
-                    <div className="time-header">Time</div>
-                    {["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"].map(time => (
-                        <div key={time} className="time-cell">{time}</div>
-                    ))}
-                </div>
-
-                {weekDates.map(date => (
-                    <div key={date} className="day-column">
-                        <div className="day-header">
-                            {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                            <div className="date">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                        </div>
-                        {["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"].map(time => {
-                            const slotKey = `${date.toDateString()}-${time}`;
-                            const isBooked = isSlotBooked(date, time);
-                            const isUserBooked = userBookings.some(b => b.slotKey === slotKey);
-                            const isSelected = selectedSlots.includes(slotKey);
-                            const isPast = isPastTime(date, time);
+                {weekDates.map((date, i) => (
+                    <div key={i} className="calendar-day">
+                        <h3>{date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</h3>
+                        {HOURS.map(hour => {
+                            const slotKey = `${date.toDateString()}-${hour}`;
+                            const isBooked = bookings.some(b => b.slotKey === slotKey);
+                            const isSelected = selectedSlots.some(s => s.slotKey === slotKey);
 
                             return (
                                 <button
-                                    key={time}
-                                    className={`time-slot ${
-                                        isPast ? 'past' :
-                                            isBooked ? (isUserBooked ? 'user-booked' : 'booked') :
-                                                isSelected ? 'selected' : ''
-                                    }`}
-                                    onClick={() => handleSlotClick(date, time)}
-                                    disabled={isPast || isBooked}
+                                    key={hour}
+                                    className={`time-slot ${isBooked ? 'booked' : ''} ${isSelected ? 'selected' : ''}`}
+                                    onClick={() => handleSlotClick(date, hour)}
+                                    disabled={isBooked}
                                 >
-                                    {isPast ? 'Past' :
-                                        isBooked ? (isUserBooked ? 'Yours' : 'Booked') :
-                                            isSelected ? 'Selected' : 'Available'}
+                                    {hour}:00
                                 </button>
                             );
                         })}
@@ -259,40 +183,26 @@ const Calendar = ({ userId }) => {
                 ))}
             </div>
 
-            <button
-                className="reserve-button"
-                onClick={openDialog}
-                disabled={selectedSlots.length === 0}
-            >
-                Reserve Selected Slots
-            </button>
-
-            <dialog ref={confirmationDialogRef} className="confirmation-dialog">
-                <h3>Confirm Your Booking</h3>
-                <p>You are about to book:</p>
-                <ul>
-                    {selectedSlots.map(slot => {
-                        const [dateStr, time] = slot.split('-');
-                        const date = new Date(dateStr);
-                        return (
-                            <li key={slot}>
-                                {date.toLocaleDateString()} at {time}
+            {selectedSlots.length > 0 && (
+                <div className="booking-summary">
+                    <h3>Selected Slots:</h3>
+                    <ul>
+                        {selectedSlots.map((slot, i) => (
+                            <li key={i}>
+                                {slot.date.toLocaleDateString()} at {slot.hour}:00
                             </li>
-                        );
-                    })}
-                </ul>
-                <p>Total hours: {selectedSlots.length} (Weekly total: {bookingsThisWeek + selectedSlots.length}/4 hours)</p>
-                <div className="dialog-buttons">
-                    <button onClick={closeDialog}>Cancel</button>
-                    <button onClick={confirmReservation}>Confirm</button>
+                        ))}
+                    </ul>
+                    <button
+                        onClick={confirmBooking}
+                        className="confirm-button"
+                    >
+                        Confirm Booking
+                    </button>
                 </div>
-            </dialog>
+            )}
         </div>
     );
-};
-
-Calendar.propTypes = {
-    userId: PropTypes.string.isRequired
 };
 
 export default Calendar;

@@ -1,4 +1,3 @@
-// src/firebase.js
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import {
@@ -8,7 +7,9 @@ import {
     query,
     where,
     onSnapshot,
-    getDocs  // Add this import
+    getDocs,
+    doc,
+    setDoc // Only adding this new import
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -37,5 +38,7 @@ export {
     query,
     where,
     onSnapshot,
-    getDocs  // Export getDocs
+    getDocs,
+    doc,
+    setDoc // Only adding this new export
 };
