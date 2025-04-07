@@ -12,6 +12,8 @@ const Register = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // New state to toggle password visibility
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // New state to toggle confirm password visibility
   const navigate = useNavigate();
   const auth = getAuth();
 
@@ -45,15 +47,21 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // Register the user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      await setDoc(doc(db, "users", userCredential.user.uid), {
+      // Send email verification
+      await user.sendEmailVerification(); // Send the verification email
+
+      // Add user data to Firestore
+      await setDoc(doc(db, "users", user.uid), {
         email: email,
         createdAt: new Date(),
         role: "user"
       });
 
-      setSuccess('Registration successful! Redirecting to dashboard...');
+      setSuccess('Registration successful! Verification email sent. Check your inbox.');
       setTimeout(() => navigate('/dashboard'), 2000);
     } catch (error) {
       let errorMessage = error.message.replace('Firebase: ', '');
@@ -100,28 +108,46 @@ const Register = () => {
 
             <div className="form-group">
               <label htmlFor="password" className="form-label">Password</label>
-              <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="form-input"
-                  placeholder="At least 6 characters"
-                  disabled={loading}
-              />
+              <div className="password-container">
+                <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'} // Toggle between text and password
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="form-input"
+                    placeholder="At least 6 characters"
+                    disabled={loading}
+                />
+                <button
+                    type="button"
+                    className="show-password-button"
+                    onClick={() => setShowPassword(!showPassword)} // Toggle showPassword state
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
             <div className="form-group">
               <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
-              <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="form-input"
-                  placeholder="Re-enter your password"
-                  disabled={loading}
-              />
+              <div className="password-container">
+                <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'} // Toggle between text and password
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="form-input"
+                    placeholder="Re-enter your password"
+                    disabled={loading}
+                />
+                <button
+                    type="button"
+                    className="show-password-button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)} // Toggle showConfirmPassword state
+                >
+                  {showConfirmPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
             <button

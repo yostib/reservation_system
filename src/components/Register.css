@@ -175,3 +175,18 @@
     padding: 10px 12px;
   }
 }
+.password-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.show-password-button {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #007bff;
+}
