@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
-//import './Login.css';
 import './Login.css';
 
 function Login() {
@@ -21,13 +20,43 @@ function Login() {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message.replace('Firebase: ', ''));
+      console.log('Firebase Error:', err);  // Add logging for debugging
+
+      const errorCode = err.code;
+      console.log('Error Code:', errorCode);  // Log error code to check what Firebase returns
+
+      // Provide custom error messages based on the Firebase error code
+      switch (errorCode) {
+        case 'auth/invalid-email':
+          setError('The email address you entered is not in a valid format. Please check and try again.');
+          break;
+        case 'auth/user-disabled':
+          setError('Your account has been disabled. Please contact support for assistance.');
+          break;
+        case 'auth/user-not-found':
+          setError('No account found for the provided email address. Please check the email or register a new account.');
+          break;
+        case 'auth/wrong-password':
+          setError('The password you entered is incorrect. Please try again or reset your password.');
+          break;
+        case 'auth/invalid-credential':
+          setError('There seems to be an issue with the credentials you entered. Double-check your email and password.');
+          break;
+        case 'auth/missing-email':
+          setError('Please enter your email address.');
+          break;
+        case 'auth/too-many-requests':
+          setError('Too many failed login attempts. Please try again later or reset your password.');
+          break;
+        default:
+          setError('An unexpected error occurred. Please try again later or contact support.');
+      }
       setLoading(false);
     }
   };
 
   return (
-      <div className="login-root"> {/* Changed container class */}
+      <div className="login-root">
         <div className="login-card">
           <h2 className="login-title">Login</h2>
           {error && <p className="login-error">{error}</p>}
