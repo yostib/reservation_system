@@ -45,7 +45,17 @@ const Calendar = ({ user }) => {
                 setBookings(bookingsData);
                 setError(null);
 
-                const userBookingsThisWeek = getUserWeeklyHours(bookingsData);
+                // Calculate weekly hours directly here
+                const now = new Date();
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - now.getDay());
+
+                const userBookingsThisWeek = bookingsData.filter(b =>
+                    b.userId === user.uid &&
+                    b.facility === facility &&
+                    new Date(b.date) >= startOfWeek
+                ).length;
+
                 setWeeklyUserHours(userBookingsThisWeek);
             } catch (err) {
                 console.error("Firestore error:", err);
@@ -66,18 +76,6 @@ const Calendar = ({ user }) => {
             date.setDate(start.getDate() + i);
             return date;
         });
-    };
-
-    const getUserWeeklyHours = (data = bookings) => {
-        const now = new Date();
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
-
-        return data.filter(b =>
-            b.userId === user.uid &&
-            b.facility === facility &&
-            new Date(b.date) >= startOfWeek
-        ).length;
     };
 
     const handleSlotClick = (date, hour) => {
@@ -125,6 +123,16 @@ const Calendar = ({ user }) => {
         }
     };
 
+    const handleBackToDashboard = () => {
+        if (selectedSlots.length > 0) {
+            if (window.confirm('You have unsaved selections. Are you sure you want to leave?')) {
+                navigate('/dashboard');
+            }
+        } else {
+            navigate('/dashboard');
+        }
+    };
+
     if (loading) return <Loader fullPage={true} />;
     if (error) return <div className="error-message">{error}</div>;
 
@@ -134,6 +142,14 @@ const Calendar = ({ user }) => {
     return (
         <div className="calendar-container">
             <div className="calendar-header">
+                <button
+                    onClick={handleBackToDashboard}
+                    className="back-button"
+                    aria-label="Back to dashboard"
+                >
+                    ← Back to Dashboard
+                </button>
+
                 <h2>Book {facility}</h2>
                 <select
                     value={facility}

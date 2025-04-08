@@ -3,15 +3,39 @@
     margin: auto;
     padding: 1rem;
     font-family: 'Segoe UI', sans-serif;
+    position: relative;
 }
 
 .calendar-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
     margin-bottom: 1.5rem;
+    padding-top: 3rem;
+    position: relative;
+}
+
+.back-button {
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.back-button:hover {
+    background: #e0e0e0;
+    transform: translateX(-2px);
 }
 
 .facility-select {
@@ -19,6 +43,7 @@
     border-radius: 8px;
     font-size: 1rem;
     background-color: #f0f0f0;
+    border: 1px solid #ccc;
 }
 
 .week-navigation button {
@@ -29,11 +54,16 @@
     color: white;
     border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.week-navigation button:hover {
+    background-color: #005fa3;
 }
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
 }
 
@@ -55,26 +85,34 @@
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.9rem;
-    transition: 0.2s;
+    transition: all 0.2s;
+}
+
+.time-slot:hover:not(.booked):not(:disabled) {
+    background: #d0e3ff;
+    transform: translateY(-1px);
 }
 
 .time-slot.booked {
     background: #ffcccc;
-    color: #444;
+    color: #666;
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .time-slot.selected {
     background: #ccffe0;
     font-weight: bold;
     border: 2px solid #28a745;
+    box-shadow: 0 2px 5px rgba(40, 167, 69, 0.3);
 }
 
 .booking-summary {
     margin-top: 2rem;
     background: #f0f8ff;
-    padding: 1rem;
+    padding: 1.5rem;
     border-radius: 10px;
+    border: 1px solid #d0e3ff;
 }
 
 .confirm-button {
@@ -86,10 +124,20 @@
     font-size: 1rem;
     cursor: pointer;
     margin-top: 1rem;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.confirm-button:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
 }
 
 .progress-wrapper {
     margin-bottom: 1.5rem;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
 }
 
 .progress-bar {
@@ -104,4 +152,30 @@
     height: 100%;
     background-color: #28a745;
     transition: width 0.3s ease-in-out;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .calendar-header {
+        flex-direction: column;
+        padding-top: 4rem;
+    }
+
+    .back-button {
+        top: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+    }
+
+    .calendar-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .week-navigation {
+        order: 3;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
 }
